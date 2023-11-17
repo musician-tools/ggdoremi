@@ -30,9 +30,50 @@ The goal of ggdoremi is to ...
 
 
 
+```{r scale_reference}
+
+return_drm_3octaves <- function(){
+  
+drm3 <- c("D", "R", "M", "F", "S", "L", "T", 
+  "d", "r", "m", "f", "s", "l", "t", 
+  "1", "2", "3", "4", "5", "6", "7", "8")
+    
+factor(drm3, levels = drm3)
+    
+  
+}
+
+return_rel_freq_1octave <- function(){
+  
+  c(1, 9/8, 81/64,4/3, 3/2, 27/16, 243/128)
+  
+}
+
+return_rel_freq_3octave <- function(){
+  
+  multiplier1octave <- return_rel_freq_1octave()
+  
+  c(multiplier1octave/2, multiplier1octave, multiplier1octave*2, 4)
+  
+}
+
+return_drm_df <- function(base_freq = 440){  #A above middle C
+  
+  data.frame(drm = return_drm_3octaves(),
+             doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do"),
+             freq = base_freq*return_rel_freq_3octave())
+  
+}
+```
+
+
+```{r}
+return_drm_df()
+
+```
+
+
 ```{r phrase_parsing}
-
-
 return_phrases_lyrics_baby_beluga <- function(){
 c("Ba-by Be-lu-ga in the deep blue sea",
   "Swim so wild and you swim so free",
@@ -52,18 +93,20 @@ return_phrases_drm_baby_beluga <- function(){
 "ffrTSTrfrT",
 "ssssfmrrd",
 "lfdlf",
-"smdsm",
+"lsmdsm",
 "rmfrm", # this might actually have an accidental.
 "rmfrm",
 "rsfmr")
   
 }
 
+
+
 return_rythem_baby_beluga <- function(){ "12a3a4a123-41234a123-412a3a4a12a341n2n341-2-3-4"}
 
-parse_phrases_drm <- function(drm_phrases){
+parse_phrases_drm <- function(drm_phrases, base_freq = 440){
   
-  levels <- stringr::str_split("DRMFSLTdrmfslt12345678", "")[[1]]
+  levels <- return_drm_3octaves()
   
   data.frame(sung_notes = drm_phrases) |> 
   tibble::tibble() |> 
@@ -73,7 +116,8 @@ parse_phrases_drm <- function(drm_phrases){
   dplyr::mutate(sung_notes_parsed = factor(sung_notes_parsed, levels)) |> 
   dplyr::group_by(id_phrase) |> 
   dplyr::mutate(id_in_phrase = dplyr::row_number()) |>
-  dplyr::select(id_phrase, id_in_phrase, drm = sung_notes_parsed)
+  dplyr::select(id_phrase, id_in_phrase, drm = sung_notes_parsed) |> 
+  dplyr::left_join(return_drm_df(base_freq = base_freq))
   
 }
 
@@ -92,11 +136,11 @@ parse_phrases_lyrics <- function(lyrics_phrases){
 ```
 
 ```{r}
-return_phrases_lyrics_baby_beluga() |> 
-  parse_phrases_lyrics()
-  
 return_phrases_drm_baby_beluga() |> 
   parse_phrases_drm()
+
+return_phrases_lyrics_baby_beluga() |> 
+  parse_phrases_lyrics()
 ```
 
 
@@ -161,6 +205,12 @@ stamp_drm_staff <- function(){
   
 }
 
+geom_note_link <- function(){
+  
+  geom_line(linetype = "dashed", color = "gray")
+  
+}
+
 
 geom_note <- function(){
   
@@ -199,11 +249,16 @@ return_df_drm_baby_beluga() |>
   ggplot() + 
   aes_drm() + 
   stamp_drm_staff() +
+  geom_note_link() +
   geom_note() + 
   geom_lyric() + 
   facet_drm() + 
   scale_xy_drm() + 
   theme_drm() 
+
+last_plot() + 
+  coord_flip() + scale_x_reverse() +
+  facet_wrap(~id_phrase, ncol = 3)
 
 ggwipe::last_plot_wipe_last() + 
   geom_drm()
@@ -211,7 +266,38 @@ ggwipe::last_plot_wipe_last() +
 
 
 
+```{r, fig.height=20, fig.width=20}
+melody_twinkle <- c("ddsslls",
+"ffmmrrd",
+"ssffmmr",
+"ssffmmr",
+"ddsslls",
+"ffmmrrd")
 
+lyrics_twinkle <- c(
+  
+  "Twin-kle twin-kle lit-tle star",
+  "How I won-der what you are",
+  "Up a-bove the world so high, ",
+  "Like a dia-mond in the sky. ",
+  "Twin-kle twin-kle lit-tle star, ",
+  "How I won-der what you are"
+  
+  
+)
+
+melody_twinkle |> 
+  join_phrases_drm_lyrics(lyrics_twinkle) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note() + 
+  facet_drm() + 
+  geom_lyric() + 
+  scale_xy_drm()
+
+```
 
 
 

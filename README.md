@@ -21,7 +21,68 @@ The goal of ggdoremi is to …
 
 ``` r
 
+return_drm_3octaves <- function(){
+  
+drm3 <- c("D", "R", "M", "F", "S", "L", "T", 
+  "d", "r", "m", "f", "s", "l", "t", 
+  "1", "2", "3", "4", "5", "6", "7", "8")
+    
+factor(drm3, levels = drm3)
+    
+  
+}
 
+return_rel_freq_1octave <- function(){
+  
+  c(1, 9/8, 81/64,4/3, 3/2, 27/16, 243/128)
+  
+}
+
+return_rel_freq_3octave <- function(){
+  
+  multiplier1octave <- return_rel_freq_1octave()
+  
+  c(multiplier1octave/2, multiplier1octave, multiplier1octave*2, 4)
+  
+}
+
+return_drm_df <- function(base_freq = 440){  #A above middle C
+  
+  data.frame(drm = return_drm_3octaves(),
+             doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do"),
+             freq = base_freq*return_rel_freq_3octave())
+  
+}
+```
+
+``` r
+return_drm_df()
+#>    drm doremi      freq
+#> 1    D     do  220.0000
+#> 2    R     re  247.5000
+#> 3    M     mi  278.4375
+#> 4    F     fa  293.3333
+#> 5    S    sol  330.0000
+#> 6    L     la  371.2500
+#> 7    T     ti  417.6562
+#> 8    d     do  440.0000
+#> 9    r     re  495.0000
+#> 10   m     mi  556.8750
+#> 11   f     fa  586.6667
+#> 12   s    sol  660.0000
+#> 13   l     la  742.5000
+#> 14   t     ti  835.3125
+#> 15   1     do  880.0000
+#> 16   2     re  990.0000
+#> 17   3     mi 1113.7500
+#> 18   4     fa 1173.3333
+#> 19   5    sol 1320.0000
+#> 20   6     la 1485.0000
+#> 21   7     ti 1670.6250
+#> 22   8     do 1760.0000
+```
+
+``` r
 return_phrases_lyrics_baby_beluga <- function(){
 c("Ba-by Be-lu-ga in the deep blue sea",
   "Swim so wild and you swim so free",
@@ -41,18 +102,20 @@ return_phrases_drm_baby_beluga <- function(){
 "ffrTSTrfrT",
 "ssssfmrrd",
 "lfdlf",
-"smdsm",
+"lsmdsm",
 "rmfrm", # this might actually have an accidental.
 "rmfrm",
 "rsfmr")
   
 }
 
+
+
 return_rythem_baby_beluga <- function(){ "12a3a4a123-41234a123-412a3a4a12a341n2n341-2-3-4"}
 
-parse_phrases_drm <- function(drm_phrases){
+parse_phrases_drm <- function(drm_phrases, base_freq = 440){
   
-  levels <- stringr::str_split("DRMFSLTdrmfslt12345678", "")[[1]]
+  levels <- return_drm_3octaves()
   
   data.frame(sung_notes = drm_phrases) |> 
   tibble::tibble() |> 
@@ -62,7 +125,8 @@ parse_phrases_drm <- function(drm_phrases){
   dplyr::mutate(sung_notes_parsed = factor(sung_notes_parsed, levels)) |> 
   dplyr::group_by(id_phrase) |> 
   dplyr::mutate(id_in_phrase = dplyr::row_number()) |>
-  dplyr::select(id_phrase, id_in_phrase, drm = sung_notes_parsed)
+  dplyr::select(id_phrase, id_in_phrase, drm = sung_notes_parsed) |> 
+  dplyr::left_join(return_drm_df(base_freq = base_freq))
   
 }
 
@@ -80,6 +144,25 @@ parse_phrases_lyrics <- function(lyrics_phrases){
 ```
 
 ``` r
+return_phrases_drm_baby_beluga() |> 
+  parse_phrases_drm()
+#> Joining with `by = join_by(drm)`
+#> # A tibble: 63 × 5
+#> # Groups:   id_phrase [9]
+#>    id_phrase id_in_phrase drm   doremi  freq
+#>        <int>        <int> <fct> <chr>  <dbl>
+#>  1         1            1 m     mi      557.
+#>  2         1            2 m     mi      557.
+#>  3         1            3 r     re      495 
+#>  4         1            4 d     do      440 
+#>  5         1            5 S     sol     330 
+#>  6         1            6 d     do      440 
+#>  7         1            7 r     re      495 
+#>  8         1            8 m     mi      557.
+#>  9         1            9 m     mi      557.
+#> 10         1           10 d     do      440 
+#> # ℹ 53 more rows
+
 return_phrases_lyrics_baby_beluga() |> 
   parse_phrases_lyrics()
 #> # A tibble: 63 × 3
@@ -97,24 +180,6 @@ return_phrases_lyrics_baby_beluga() |>
 #>  9         1            9 blue 
 #> 10         1           10 sea  
 #> # ℹ 53 more rows
-  
-return_phrases_drm_baby_beluga() |> 
-  parse_phrases_drm()
-#> # A tibble: 62 × 3
-#> # Groups:   id_phrase [9]
-#>    id_phrase id_in_phrase drm  
-#>        <int>        <int> <fct>
-#>  1         1            1 m    
-#>  2         1            2 m    
-#>  3         1            3 r    
-#>  4         1            4 d    
-#>  5         1            5 S    
-#>  6         1            6 d    
-#>  7         1            7 r    
-#>  8         1            8 m    
-#>  9         1            9 m    
-#> 10         1           10 d    
-#> # ℹ 52 more rows
 ```
 
 ``` r
@@ -142,21 +207,22 @@ join_phrases_drm_lyrics(
   drm_phrases = return_phrases_drm_baby_beluga(), 
   lyrics_phrases = return_phrases_lyrics_baby_beluga() 
   )
+#> Joining with `by = join_by(drm)`
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
-#> # A tibble: 63 × 4
+#> # A tibble: 63 × 6
 #> # Groups:   id_phrase [9]
-#>    id_phrase id_in_phrase drm   lyric
-#>        <int>        <int> <fct> <chr>
-#>  1         1            1 m     Ba   
-#>  2         1            2 m     by   
-#>  3         1            3 r     Be   
-#>  4         1            4 d     lu   
-#>  5         1            5 S     ga   
-#>  6         1            6 d     in   
-#>  7         1            7 r     the  
-#>  8         1            8 m     deep 
-#>  9         1            9 m     blue 
-#> 10         1           10 d     sea  
+#>    id_phrase id_in_phrase drm   doremi  freq lyric
+#>        <int>        <int> <fct> <chr>  <dbl> <chr>
+#>  1         1            1 m     mi      557. Ba   
+#>  2         1            2 m     mi      557. by   
+#>  3         1            3 r     re      495  Be   
+#>  4         1            4 d     do      440  lu   
+#>  5         1            5 S     sol     330  ga   
+#>  6         1            6 d     do      440  in   
+#>  7         1            7 r     re      495  the  
+#>  8         1            8 m     mi      557. deep 
+#>  9         1            9 m     mi      557. blue 
+#> 10         1           10 d     do      440  sea  
 #> # ℹ 53 more rows
 ```
 
@@ -200,6 +266,12 @@ stamp_drm_staff <- function(){
   
 }
 
+geom_note_link <- function(){
+  
+  geom_line(linetype = "dashed", color = "gray")
+  
+}
+
 
 geom_note <- function(){
   
@@ -236,24 +308,71 @@ return_df_drm_baby_beluga() |>
   ggplot() + 
   aes_drm() + 
   stamp_drm_staff() +
+  geom_note_link() +
   geom_note() + 
   geom_lyric() + 
   facet_drm() + 
   scale_xy_drm() + 
   theme_drm() 
+#> Joining with `by = join_by(drm)`
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
-#> Warning: Removed 1 rows containing missing values (`geom_point()`).
-#> Warning: Removed 1 rows containing missing values (`geom_text()`).
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  coord_flip() + scale_x_reverse() +
+  facet_wrap(~id_phrase, ncol = 3)
+#> Scale for x is already present.
+#> Adding another scale for x, which will replace the existing scale.
+```
+
+![](README_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 ``` r
 
 ggwipe::last_plot_wipe_last() + 
   geom_drm()
-#> Warning: Removed 1 rows containing missing values (`geom_point()`).
-#> Removed 1 rows containing missing values (`geom_text()`).
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+
+``` r
+melody_twinkle <- c("ddsslls",
+"ffmmrrd",
+"ssffmmr",
+"ssffmmr",
+"ddsslls",
+"ffmmrrd")
+
+lyrics_twinkle <- c(
+  
+  "Twin-kle twin-kle lit-tle star",
+  "How I won-der what you are",
+  "Up a-bove the world so high, ",
+  "Like a dia-mond in the sky. ",
+  "Twin-kle twin-kle lit-tle star, ",
+  "How I won-der what you are"
+  
+  
+)
+
+melody_twinkle |> 
+  join_phrases_drm_lyrics(lyrics_twinkle) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note() + 
+  facet_drm() + 
+  geom_lyric() + 
+  scale_xy_drm()
+#> Joining with `by = join_by(drm)`
+#> Joining with `by = join_by(id_phrase, id_in_phrase)`
+#> Warning: Removed 3 rows containing missing values (`geom_point()`).
+#> Warning: Removed 3 rows containing missing values (`geom_text()`).
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
