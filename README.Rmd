@@ -9,6 +9,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
+library(magrittr)
+"ccd/" %>% stringr::str_split("") %>% .[[1]] %>% rev %>% paste(collapse = "") %>% stringr::str_extract_all("\\/.|.") %>% .[[1]] %>% rev
 ```
 
 # ggdoremi
@@ -60,7 +63,7 @@ return_rel_freq_3octave <- function(){
 return_drm_df <- function(base_freq = 440){  #A above middle C
   
   data.frame(drm = return_drm_3octaves(),
-             doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do"),
+             doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do") %>% forcats::fct_inorder(),
              freq = base_freq*return_rel_freq_3octave())
   
 }
@@ -75,38 +78,31 @@ return_drm_df()
 
 ```{r phrase_parsing}
 return_phrases_lyrics_baby_beluga <- function(){
-c("Ba-by Be-lu-ga in the deep blue sea",
-  "Swim so wild and you swim so free",
-  "heav-en ab-o-ove and the sea be-low",
-  "just a lit-tle white whale on the go",
-  "Ba-by Be-lu-ga",
-  "Oh Ba-by Be-lu-ga",
-  "Is the wa-ter warm", 
-  "is your ma-ma home",
-  "with you so hap-py") 
+"Ba-by Be-lu-ga in the deep blue sea
+Swim so wild and you swim so free,
+heav-en ab-o-ove and the sea be-low,
+just a lit-tle white whale on the go,
+Ba-by Be-lu-ga,
+Oh Ba-by Be-lu-ga,
+Is the wa-ter warm, 
+is your ma-ma home,
+with you so hap-py"
 }
 
 return_phrases_drm_baby_beluga <- function(){
   
-  c("mmrdSdrmmd",
-"mmsffmrr",
-"ffrTSTrfrT",
-"ssssfmrrd",
-"lfdlf",
-"lsmdsm",
-"rmfrm", # this might actually have an accidental.
-"rmfrm",
-"rsfmr")
+"mmrdSdrmmd mmsffmrr 
+ffrTSTrfrT ssssfmrrd 
+lfdlf lsmdsm 
+rmfrm rmfrm rsfmr"
   
 }
 
-
-
-return_rythem_baby_beluga <- function(){ "12a3a4a123-41234a123-412a3a4a12a341n2n341-2-3-4"}
-
-parse_phrases_drm <- function(drm_phrases, base_freq = 440){
+parse_phrases_drm <- function(drm_phrases = return_phrases_drm_baby_beluga(), base_freq = 440){
   
   levels <- return_drm_3octaves()
+  
+  drm_phrases <- strsplit(drm_phrases,  "\\s+")[[1]]
   
   data.frame(sung_notes = drm_phrases) |> 
   tibble::tibble() |> 
@@ -123,6 +119,8 @@ parse_phrases_drm <- function(drm_phrases, base_freq = 440){
 
 parse_phrases_lyrics <- function(lyrics_phrases){
   
+    lyrics_phrases <- strsplit(lyrics_phrases,  "\\n")[[1]]
+  
   tibble::tibble(words = lyrics_phrases) |> 
   dplyr::mutate(id_phrase = dplyr::row_number()) |> 
   dplyr::mutate(words_parsed = stringr::str_split(words, " |-")) |> 
@@ -132,8 +130,10 @@ parse_phrases_lyrics <- function(lyrics_phrases){
   dplyr::select(id_phrase, id_in_phrase, lyric = words_parsed)
   
 }
-
 ```
+
+
+
 
 ```{r}
 return_phrases_drm_baby_beluga() |> 
@@ -165,6 +165,35 @@ return_df_drm_baby_beluga <- function(){
 
 ```
 
+```{r return_rhythm_baby_beluga}
+return_rhythm_baby_beluga <- function(){ 
+      rhythm <- "12a3a4a12341234a123412a3a4a12a34a1a234a1234"
+    measure <- "1111111222233333444455555556666666777778888"    
+beat_in_measure  <- "12233441234123441234122334412a3441123441234"
+ind_voiced      <- "1111111111011111111011111111011111111111000"
+ 
+data.frame(rhythm, measure, beat_in_measure, ind_voiced)
+
+  }
+
+# time_span <- function(num_measures = 12){
+#   
+# measure <- c( "1" ,"e", "n", "a", "2", "e",
+#  "n" ,"a", "3", "e", "n", "a",
+#  "4" ,"e", "n", "a")
+#   
+# time_frame <- 1:(length(measure)*num_measures)
+# 
+# data.frame(time_frame,
+# time_frame_element = rep(measure, num_measures))
+# 
+# }
+
+
+# time_span() |> dplyr::bind_cols(data.frame(rythm=return_rythem_baby_beluga()))
+
+```
+
 
 ```{r}
 join_phrases_drm_lyrics(
@@ -175,20 +204,19 @@ join_phrases_drm_lyrics(
 ```
 
 
-```{r}
-library(tidyverse)
-
+```{r drm2gg}
 aes_drm <- function(){
   
-    aes(x = id_in_phrase, y = as.numeric(drm))
+    ggplot2::aes(x = id_in_phrase, y = as.numeric(drm))
   
 }
 
 
 scale_xy_drm <- function(){
   
-  list(scale_y_continuous(limits = c(4, 16)),
-  scale_x_continuous(expand = expansion(mult = c(.1, .1))))
+  list(ggplot2::scale_y_continuous(limits = c(4, 16)),
+  ggplot2::scale_x_continuous(
+    expand = ggplot2::expansion(mult = c(.1, .1))))
                                 
 }
 
@@ -212,22 +240,22 @@ geom_note_link <- function(){
 }
 
 
-geom_note <- function(){
+geom_note <- function(alpha = .2, size = 26, shape = 19, ...){
   
-  geom_point(alpha = .2, size = 26, shape = 19)
+  ggplot2::geom_point(alpha = alpha, size = size, shape = shape, ...)
   
 }
 
 geom_lyric <- function(){
   
-  geom_text(aes(label = lyric), size = 8)
+  ggplot2::geom_text(aes(label = lyric), size = 8)
   
   
 }
 
 geom_drm <- function(){
   
-  geom_text(aes(label = drm), size = 8)
+  ggplot2::geom_text(aes(label = drm), size = 8)
   
   
 }
@@ -235,9 +263,25 @@ geom_drm <- function(){
 
 theme_drm <- function(){
   
-  list(theme(legend.position = "none"),
-  theme_minimal() ,
-  theme(panel.grid = element_blank()))
+  list(ggplot2::theme(legend.position = "none"),
+  ggplot2::theme_minimal() ,
+  ggplot2::theme(panel.grid = ggplot2::element_blank()))
+  
+}
+
+
+drm2gg <- function(drm_df){
+  
+  drm_df |> 
+  ggplot2::ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() +
+  geom_note() + 
+  geom_lyric() + 
+  facet_drm() + 
+  scale_xy_drm() + 
+  theme_drm() 
   
 }
 
@@ -245,6 +289,7 @@ theme_drm <- function(){
 
 
 ```{r, fig.height=20, fig.width=20}
+library(tidyverse)
 return_df_drm_baby_beluga() |> 
   ggplot() + 
   aes_drm() + 
@@ -267,25 +312,15 @@ ggwipe::last_plot_wipe_last() +
 
 
 ```{r, fig.height=20, fig.width=20}
-melody_twinkle <- c("ddsslls",
-"ffmmrrd",
-"ssffmmr",
-"ssffmmr",
-"ddsslls",
-"ffmmrrd")
+melody_twinkle <- "ddsslls ffmmrrd ssffmmr ssffmmr ddsslls ffmmrrd"
 
-lyrics_twinkle <- c(
+lyrics_twinkle <- "Twin-kle twin-kle lit-tle star
+How I won-der what you are
+Up a-bove the world so high 
+Like a dia-mond in the sky 
+Twin-kle twin-kle lit-tle star 
+How I won-der what you are"
   
-  "Twin-kle twin-kle lit-tle star",
-  "How I won-der what you are",
-  "Up a-bove the world so high, ",
-  "Like a dia-mond in the sky. ",
-  "Twin-kle twin-kle lit-tle star, ",
-  "How I won-der what you are"
-  
-  
-)
-
 melody_twinkle |> 
   join_phrases_drm_lyrics(lyrics_twinkle) |> 
   ggplot() + 
@@ -295,9 +330,158 @@ melody_twinkle |>
   geom_note() + 
   facet_drm() + 
   geom_lyric() + 
-  scale_xy_drm()
+  scale_xy_drm() 
+
+ggwipe::last_plot_wipe_last() +
+  theme_void() +
+  geom_note(color = "black", fill = "white", shape = 21, alpha = 1)
+
+melodie_are_you_sleeping <- "drmd drmd mfs mfs slsfmd slsfmd dSd dSd"
+
+lyrics_are_you_sleeping <- 
+"Are you sleep-ing
+Are you sleep-ing
+Bro-ther John
+Bro-ther John
+Mor-ning bells are ring-ing
+Mor-ning bells are ring-ing
+Ding ding dong
+Ding Ding Dong"
+
+
+melodie_are_you_sleeping |> 
+  join_phrases_drm_lyrics(lyrics_are_you_sleeping) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note() + 
+  facet_drm() + 
+  geom_lyric() + 
+  scale_xy_drm() 
+
+ggwipe::last_plot_wipe_last() +
+  theme_void() +
+  geom_note(color = "black", fill = "white", shape = 21, alpha = 1)
+
+
+lyrics_alphabet <- 
+"a b c d e f g
+h i j k l m n o p
+q r s t u v
+w x y z"
+
+melody_alphabet <- "ddsslls ffmmrrrrd ssfmmr sfmr"
+
+
+melody_alphabet |> 
+  join_phrases_drm_lyrics(lyrics_alphabet) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note() + 
+  facet_drm() + 
+  geom_lyric() + 
+  scale_xy_drm() + 
+  coord_flip() + 
+  theme_drm() 
+
+# lyrics_twinkle_mandarin <- "萼 片 长"
+melody_twinkle_mandarin <- "dds"
+
+library(ggplot2)
+theme <- theme_get()
+#using the Chinese fonts you have, check it with font book.  
+# theme$text$family <- "STFangsong"
+theme_set(theme)
+
+# melody_twinkle_mandarin |> 
+#   join_phrases_drm_lyrics(lyrics_twinkle_mandarin) |> 
+#   ggplot() + 
+#   aes_drm() + 
+#   stamp_drm_staff() +
+#   geom_note_link() + 
+#   geom_note() + 
+#   facet_drm() + 
+#   geom_lyric() + 
+#   scale_xy_drm() + 
+#   coord_flip()
+
+
+```
+
+
+```{r, fig.height=20, fig.width=20}
+drm_bus <- "Sdddddmsmd
+rTSsmd
+Sdddddmsmd
+rSSd"
+
+lyrics_bus <- "The peo-ple on the bus go up and down
+up and down up and down
+The peo-ple on the bus go up and down
+All through the town"
+
+
+drm_bus |> 
+  join_phrases_drm_lyrics(lyrics_bus) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note() + 
+  facet_drm() + 
+  geom_lyric() + 
+  scale_xy_drm() + 
+  # coord_flip() + 
+  theme_drm() 
+```
+
+# imagination
+
+```{r , fig.height=15, fig.width=15}
+drm_imagination <- "LdsLds
+Ldt1t1t1ts
+Ldmfsm
+rdTdTdTS"
+
+lyrics_imagination <-"Come with me and you'll be
+In a world of pure im-a-gi-na-tion
+Take a look and you'll see
+In-to your im-a-gi-na-tion"
+
+drm_imagination |> 
+  join_phrases_drm_lyrics(lyrics_imagination) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note() + 
+  facet_drm() + 
+  geom_lyric() + 
+  scale_xy_drm() + 
+  # coord_flip() + 
+  theme_drm() +
+  aes(color = doremi %>% fct_rev())
 
 ```
 
 
 
+```{r}
+knitr::knit_code$get() |> names()
+```
+
+```{r}
+readme2pkg::chunk_to_r(c("scale_reference",
+                         "phrase_parsing",
+                         "join_phrases_drm_lyrics",
+                         "return_rhythm_baby_beluga",
+                         "drm2gg"))
+```
+
+
+```{r, error = T}
+devtools::check(".")
+```
