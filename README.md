@@ -46,7 +46,7 @@ return_rel_freq_3octave <- function(){
   
 }
 
-return_drm_df <- function(base_freq = 440){  #A above middle C
+return_drm_df <- function(base_freq = 311.127){  #E above middle C
   
   data.frame(drm = return_drm_3octaves(),
              doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do") %>% forcats::fct_inorder(),
@@ -58,28 +58,28 @@ return_drm_df <- function(base_freq = 440){  #A above middle C
 ``` r
 return_drm_df()
 #>    drm doremi      freq
-#> 1    D     do  220.0000
-#> 2    R     re  247.5000
-#> 3    M     mi  278.4375
-#> 4    F     fa  293.3333
-#> 5    S    sol  330.0000
-#> 6    L     la  371.2500
-#> 7    T     ti  417.6562
-#> 8    d     do  440.0000
-#> 9    r     re  495.0000
-#> 10   m     mi  556.8750
-#> 11   f     fa  586.6667
-#> 12   s    sol  660.0000
-#> 13   l     la  742.5000
-#> 14   t     ti  835.3125
-#> 15   1     do  880.0000
-#> 16   2     re  990.0000
-#> 17   3     mi 1113.7500
-#> 18   4     fa 1173.3333
-#> 19   5    sol 1320.0000
-#> 20   6     la 1485.0000
-#> 21   7     ti 1670.6250
-#> 22   8     do 1760.0000
+#> 1    D     do  155.5635
+#> 2    R     re  175.0089
+#> 3    M     mi  196.8851
+#> 4    F     fa  207.4180
+#> 5    S    sol  233.3453
+#> 6    L     la  262.5134
+#> 7    T     ti  295.3276
+#> 8    d     do  311.1270
+#> 9    r     re  350.0179
+#> 10   m     mi  393.7701
+#> 11   f     fa  414.8360
+#> 12   s    sol  466.6905
+#> 13   l     la  525.0268
+#> 14   t     ti  590.6552
+#> 15   1     do  622.2540
+#> 16   2     re  700.0358
+#> 17   3     mi  787.5402
+#> 18   4     fa  829.6720
+#> 19   5    sol  933.3810
+#> 20   6     la 1050.0536
+#> 21   7     ti 1181.3103
+#> 22   8     do 1244.5080
 ```
 
 ``` r
@@ -199,10 +199,11 @@ return_df_drm_baby_beluga <- function(){
 
 ``` r
 return_rhythm_baby_beluga <- function(){ 
-      rhythm <- "12a3a4a12341234a123412a3a4a12a34a1a234a1234"
-    measure <- "1111111222233333444455555556666666777778888"    
+  
+      rhythm <-     "12a3a4a12341234a123412a3a4a12a34a1a234a1234"
+ind_voiced   <-     "1111111111011111111011111111011111111111000"
+    measure <-      "1111111222233333444455555556666666777778888"    
 beat_in_measure  <- "12233441234123441234122334412a3441123441234"
-ind_voiced      <- "1111111111011111111011111111011111111111000"
  
 data.frame(rhythm, measure, beat_in_measure, ind_voiced)
 
@@ -257,60 +258,76 @@ aes_drm <- function(){
 }
 
 
-scale_xy_drm <- function(){
+scale_xy_drm <- function(y_limits = c(4, 16)){
   
-  list(ggplot2::scale_y_continuous(limits = c(4, 16)),
+  list(ggplot2::scale_y_continuous(limits = y_limits),
   ggplot2::scale_x_continuous(
-    expand = ggplot2::expansion(mult = c(.1, .1))))
+    expand = ggplot2::expansion(mult = c(.15, .15))))
                                 
 }
 
-facet_drm <- function(){
+facet_drm <- function(ncol = 2){
   
-  facet_wrap(~ id_phrase, ncol = 2, scales = "free_x")
-  
-}
-
-
-stamp_drm_staff <- function(){
-  
-    geom_hline(yintercept = c(8,10,12,14,16), color = "grey")
+  facet_wrap(~ id_phrase, ncol = ncol, scales = "free_x")
   
 }
 
-geom_note_link <- function(){
+
+stamp_drm_staff <- function(color = "grey"){
   
-  geom_line(linetype = "dashed", color = "gray")
+    geom_hline(yintercept = c(8,10,12,14,16), color = color)
+  
+}
+
+geom_note_link <- function(linetype = "dashed", color = "gray"){
+  
+  geom_line(linetype = linetype, color = color)
   
 }
 
 
 geom_note <- function(alpha = .2, size = 26, shape = 19, ...){
   
+  list(ggplot2::geom_point(alpha = 1, size = size, shape = shape, fill = "white", color = "white", ...),
   ggplot2::geom_point(alpha = alpha, size = size, shape = shape, ...)
+  )
   
 }
 
-geom_lyric <- function(){
+geom_lyric <- function(size = 8){
   
-  ggplot2::geom_text(aes(label = lyric), size = 8)
-  
+  ggplot2::geom_text(aes(label = lyric), size = size)
   
 }
 
-geom_drm <- function(){
+geom_drm <- function(size = 8){
   
-  ggplot2::geom_text(aes(label = drm), size = 8)
-  
+  ggplot2::geom_text(aes(label = drm), size = size)
   
 }
+
+
+geom_doremi <- function(size = 8){
+  
+  ggplot2::geom_text(aes(label = doremi), size = size)
+  
+}
+
+
 
 
 theme_drm <- function(){
   
-  list(ggplot2::theme(legend.position = "none"),
-  ggplot2::theme_minimal() ,
-  ggplot2::theme(panel.grid = ggplot2::element_blank()))
+  list(
+    ggplot2::theme_void(),
+    ggplot2::theme(legend.position = "none"),
+  ggplot2::theme(panel.grid = ggplot2::element_blank()),
+  ggplot2::theme(panel.spacing.x =  
+          unit(0, "lines")),
+  ggplot2::theme(panel.spacing.y =  
+          unit(.20, "lines")),
+  ggplot2::theme(strip.text = element_blank()))
+    
   
 }
 
@@ -359,6 +376,8 @@ return_df_drm_baby_beluga() |>
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 #> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_point()`).
+#> Removed 1 row containing missing values or values outside the scale range
+#> (`geom_point()`).
 #> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_text()`).
 ```
@@ -374,7 +393,9 @@ last_plot() +
 #> Adding another scale for x, which will replace the existing scale.
 #> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_point()`).
-#> Removed 1 row containing missing values or values outside the scale range
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_point()`).
+#> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_text()`).
 ```
 
@@ -383,10 +404,12 @@ last_plot() +
 ``` r
 
 ggwipe::last_plot_wipe_last() + 
-  geom_drm()
+  geom_doremi()
 #> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_point()`).
-#> Removed 1 row containing missing values or values outside the scale range
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_point()`).
+#> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_text()`).
 ```
 
@@ -411,10 +434,13 @@ melody_twinkle |>
   geom_note() + 
   facet_drm() + 
   geom_lyric() + 
-  scale_xy_drm() 
+  scale_xy_drm() + 
+  theme_drm()
 #> Joining with `by = join_by(drm)`
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 #> Warning: Removed 3 rows containing missing values or values outside the scale range
+#> (`geom_point()`).
+#> Removed 3 rows containing missing values or values outside the scale range
 #> (`geom_point()`).
 #> Warning: Removed 3 rows containing missing values or values outside the scale range
 #> (`geom_text()`).
@@ -427,17 +453,21 @@ melody_twinkle |>
 ggwipe::last_plot_wipe_last() +
   theme_void() +
   geom_note(color = "black", fill = "white", shape = 21, alpha = 1)
+#> Warning: Duplicated aesthetics after name standardisation: colour and fill
 #> Warning: Removed 3 rows containing missing values or values outside the scale range
 #> (`geom_point()`).
-#> Warning: Removed 3 rows containing missing values or values outside the scale range
+#> Removed 3 rows containing missing values or values outside the scale range
+#> (`geom_point()`).
+#> Removed 3 rows containing missing values or values outside the scale range
+#> (`geom_point()`).
+#> Removed 3 rows containing missing values or values outside the scale range
 #> (`geom_point()`).
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 ``` r
-
-melodie_are_you_sleeping <- "drmd drmd mfs mfs slsfmr slsfmr dSd dSd"
+melodie_are_you_sleeping <- "drmd drmd mfs mfs slsfmd slsfmd dSd dSd"
 
 lyrics_are_you_sleeping <- 
 "Are you sleep-ing
@@ -456,28 +486,28 @@ melodie_are_you_sleeping |>
   aes_drm() + 
   stamp_drm_staff() +
   geom_note_link() + 
-  geom_note() + 
-  facet_drm() + 
-  geom_lyric() + 
-  scale_xy_drm() 
+  geom_note(size = 12) + 
+  facet_drm(ncol = 4) + 
+  geom_lyric(size = 4) + 
+  scale_xy_drm() +
+  theme_drm()
 #> Joining with `by = join_by(drm)`
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 
 ggwipe::last_plot_wipe_last() +
   theme_void() +
   geom_note(color = "black", fill = "white", shape = 21, alpha = 1)
+#> Warning: Duplicated aesthetics after name standardisation: colour and fill
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 ``` r
-
-
 lyrics_alphabet <- 
 "a b c d e f g
 h i j k l m n o p
@@ -503,7 +533,7 @@ melody_alphabet |>
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-6-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
 
@@ -557,7 +587,7 @@ drm_bus |>
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 # imagination
 
@@ -589,7 +619,30 @@ drm_imagination |>
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+drm_imagination |> 
+  join_phrases_drm_lyrics(lyrics_imagination) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note(size = 15) + 
+  facet_drm() + 
+  geom_lyric(size = 4) + 
+  scale_xy_drm() + 
+  # coord_flip() + 
+  theme_drm() +
+  aes(color = doremi %>% fct_rev()) + 
+  theme(legend.position = "none") + 
+  theme(strip.text = element_blank()) +
+  theme(panel.spacing = unit(-0, "lines"))
+#> Joining with `by = join_by(drm)`
+#> Joining with `by = join_by(id_phrase, id_in_phrase)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
 knitr::knit_code$get() |> names()
@@ -600,7 +653,9 @@ knitr::knit_code$get() |> names()
 #>  [9] "drm2gg"                    "unnamed-chunk-5"          
 #> [11] "unnamed-chunk-6"           "unnamed-chunk-7"          
 #> [13] "unnamed-chunk-8"           "unnamed-chunk-9"          
-#> [15] "unnamed-chunk-10"          "unnamed-chunk-11"
+#> [15] "unnamed-chunk-10"          "unnamed-chunk-11"         
+#> [17] "unnamed-chunk-12"          "unnamed-chunk-13"         
+#> [19] "unnamed-chunk-14"
 ```
 
 ``` r
@@ -613,163 +668,4 @@ readme2pkg::chunk_to_r(c("scale_reference",
 
 ``` r
 devtools::check(".")
-#> ══ Documenting ═════════════════════════════════════════════════════════════════
-#> ℹ Updating ggdoremi documentation
-#> ℹ Loading ggdoremi
-#> 
-#> ══ Building ════════════════════════════════════════════════════════════════════
-#> Setting env vars:
-#> • CFLAGS    : -Wall -pedantic
-#> • CXXFLAGS  : -Wall -pedantic
-#> • CXX11FLAGS: -Wall -pedantic
-#> • CXX14FLAGS: -Wall -pedantic
-#> • CXX17FLAGS: -Wall -pedantic
-#> • CXX20FLAGS: -Wall -pedantic
-#> ── R CMD build ─────────────────────────────────────────────────────────────────
-#> * checking for file ‘/Users/evangelinereynolds/Google Drive/r_packages/ggdoremi/DESCRIPTION’ ... OK
-#> * preparing ‘ggdoremi’:
-#> * checking DESCRIPTION meta-information ... OK
-#> * checking for LF line-endings in source and make files and shell scripts
-#> * checking for empty or unneeded directories
-#> Removed empty directory ‘ggdoremi/man’
-#> * building ‘ggdoremi_0.0.0.9000.tar.gz’
-#> 
-#> ══ Checking ════════════════════════════════════════════════════════════════════
-#> Setting env vars:
-#> • _R_CHECK_CRAN_INCOMING_REMOTE_               : FALSE
-#> • _R_CHECK_CRAN_INCOMING_                      : FALSE
-#> • _R_CHECK_FORCE_SUGGESTS_                     : FALSE
-#> • _R_CHECK_PACKAGES_USED_IGNORE_UNUSED_IMPORTS_: FALSE
-#> • NOT_CRAN                                     : true
-#> ── R CMD check ─────────────────────────────────────────────────────────────────
-#> * using log directory ‘/private/var/folders/zy/vfmj60bs3zv6r_2dsk18_vj00000gn/T/Rtmpe1aunO/file116965fad5f24/ggdoremi.Rcheck’
-#> * using R version 4.2.2 (2022-10-31)
-#> * using platform: x86_64-apple-darwin17.0 (64-bit)
-#> * using session charset: UTF-8
-#> * using options ‘--no-manual --as-cran’
-#> * checking for file ‘ggdoremi/DESCRIPTION’ ... OK
-#> * this is package ‘ggdoremi’ version ‘0.0.0.9000’
-#> * package encoding: UTF-8
-#> * checking package namespace information ... OK
-#> * checking package dependencies ... OK
-#> * checking if this is a source package ... OK
-#> * checking if there is a namespace ... OK
-#> * checking for executable files ... OK
-#> * checking for hidden files and directories ... OK
-#> * checking for portable file names ... OK
-#> * checking for sufficient/correct file permissions ... OK
-#> * checking serialization versions ... OK
-#> * checking whether package ‘ggdoremi’ can be installed ... OK
-#> * checking installed package size ... OK
-#> * checking package directory ... OK
-#> * checking for future file timestamps ... OK
-#> * checking DESCRIPTION meta-information ... WARNING
-#> Non-standard license specification:
-#>   `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-#>   license
-#> Standardizable: FALSE
-#> * checking top-level files ... NOTE
-#> Non-standard files/directories found at top level:
-#>   ‘README.Rmd’ ‘README_files’
-#> * checking for left-over files ... OK
-#> * checking index information ... OK
-#> * checking package subdirectories ... OK
-#> * checking R files for non-ASCII characters ... OK
-#> * checking R files for syntax errors ... OK
-#> * checking whether the package can be loaded ... OK
-#> * checking whether the package can be loaded with stated dependencies ... OK
-#> * checking whether the package can be unloaded cleanly ... OK
-#> * checking whether the namespace can be loaded with stated dependencies ... OK
-#> * checking whether the namespace can be unloaded cleanly ... OK
-#> * checking loading without being on the library search path ... OK
-#> * checking dependencies in R code ... WARNING
-#> '::' or ':::' imports not declared from:
-#>   ‘dplyr’ ‘forcats’ ‘ggplot2’ ‘stringr’ ‘tibble’ ‘tidyr’
-#> * checking S3 generic/method consistency ... OK
-#> * checking replacement functions ... OK
-#> * checking foreign function calls ... OK
-#> * checking R code for possible problems ... NOTE
-#> aes_drm: no visible binding for global variable ‘id_in_phrase’
-#> aes_drm: no visible binding for global variable ‘drm’
-#> facet_drm: no visible global function definition for ‘facet_wrap’
-#> geom_drm: no visible global function definition for ‘aes’
-#> geom_drm: no visible binding for global variable ‘drm’
-#> geom_lyric: no visible global function definition for ‘aes’
-#> geom_lyric: no visible binding for global variable ‘lyric’
-#> geom_note_link: no visible global function definition for ‘geom_line’
-#> parse_phrases_drm: no visible binding for global variable ‘sung_notes’
-#> parse_phrases_drm: no visible binding for global variable
-#>   ‘sung_notes_parsed’
-#> parse_phrases_drm: no visible binding for global variable ‘id_phrase’
-#> parse_phrases_drm: no visible binding for global variable
-#>   ‘id_in_phrase’
-#> parse_phrases_lyrics: no visible binding for global variable ‘words’
-#> parse_phrases_lyrics: no visible binding for global variable
-#>   ‘words_parsed’
-#> parse_phrases_lyrics: no visible binding for global variable
-#>   ‘id_phrase’
-#> parse_phrases_lyrics: no visible binding for global variable
-#>   ‘id_in_phrase’
-#> return_drm_df: no visible global function definition for ‘%>%’
-#> stamp_drm_staff: no visible global function definition for ‘geom_hline’
-#> Undefined global functions or variables:
-#>   %>% aes drm facet_wrap geom_hline geom_line id_in_phrase id_phrase
-#>   lyric sung_notes sung_notes_parsed words words_parsed
-#> * checking for missing documentation entries ... OK
-#> * checking examples ... NONE
-#> * checking for non-standard things in the check directory ... OK
-#> * checking for detritus in the temp directory ... OK
-#> * DONE
-#> 
-#> Status: 2 WARNINGs, 2 NOTEs
-#> See
-#>   ‘/private/var/folders/zy/vfmj60bs3zv6r_2dsk18_vj00000gn/T/Rtmpe1aunO/file116965fad5f24/ggdoremi.Rcheck/00check.log’
-#> for details.
-#> ── R CMD check results ──────────────────────────────── ggdoremi 0.0.0.9000 ────
-#> Duration: 25.9s
-#> 
-#> ❯ checking DESCRIPTION meta-information ... WARNING
-#>   Non-standard license specification:
-#>     `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-#>     license
-#>   Standardizable: FALSE
-#> 
-#> ❯ checking dependencies in R code ... WARNING
-#>   '::' or ':::' imports not declared from:
-#>     ‘dplyr’ ‘forcats’ ‘ggplot2’ ‘stringr’ ‘tibble’ ‘tidyr’
-#> 
-#> ❯ checking top-level files ... NOTE
-#>   Non-standard files/directories found at top level:
-#>     ‘README.Rmd’ ‘README_files’
-#> 
-#> ❯ checking R code for possible problems ... NOTE
-#>   aes_drm: no visible binding for global variable ‘id_in_phrase’
-#>   aes_drm: no visible binding for global variable ‘drm’
-#>   facet_drm: no visible global function definition for ‘facet_wrap’
-#>   geom_drm: no visible global function definition for ‘aes’
-#>   geom_drm: no visible binding for global variable ‘drm’
-#>   geom_lyric: no visible global function definition for ‘aes’
-#>   geom_lyric: no visible binding for global variable ‘lyric’
-#>   geom_note_link: no visible global function definition for ‘geom_line’
-#>   parse_phrases_drm: no visible binding for global variable ‘sung_notes’
-#>   parse_phrases_drm: no visible binding for global variable
-#>     ‘sung_notes_parsed’
-#>   parse_phrases_drm: no visible binding for global variable ‘id_phrase’
-#>   parse_phrases_drm: no visible binding for global variable
-#>     ‘id_in_phrase’
-#>   parse_phrases_lyrics: no visible binding for global variable ‘words’
-#>   parse_phrases_lyrics: no visible binding for global variable
-#>     ‘words_parsed’
-#>   parse_phrases_lyrics: no visible binding for global variable
-#>     ‘id_phrase’
-#>   parse_phrases_lyrics: no visible binding for global variable
-#>     ‘id_in_phrase’
-#>   return_drm_df: no visible global function definition for ‘%>%’
-#>   stamp_drm_staff: no visible global function definition for ‘geom_hline’
-#>   Undefined global functions or variables:
-#>     %>% aes drm facet_wrap geom_hline geom_line id_in_phrase id_phrase
-#>     lyric sung_notes sung_notes_parsed words words_parsed
-#> 
-#> 0 errors ✔ | 2 warnings ✖ | 2 notes ✖
-#> Error: R CMD check found WARNINGs
 ```

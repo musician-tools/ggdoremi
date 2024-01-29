@@ -60,7 +60,7 @@ return_rel_freq_3octave <- function(){
   
 }
 
-return_drm_df <- function(base_freq = 440){  #A above middle C
+return_drm_df <- function(base_freq = 311.127){  #E above middle C
   
   data.frame(drm = return_drm_3octaves(),
              doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do") %>% forcats::fct_inorder(),
@@ -167,10 +167,11 @@ return_df_drm_baby_beluga <- function(){
 
 ```{r return_rhythm_baby_beluga}
 return_rhythm_baby_beluga <- function(){ 
-      rhythm <- "12a3a4a12341234a123412a3a4a12a34a1a234a1234"
-    measure <- "1111111222233333444455555556666666777778888"    
+  
+      rhythm <-     "12a3a4a12341234a123412a3a4a12a34a1a234a1234"
+ind_voiced   <-     "1111111111011111111011111111011111111111000"
+    measure <-      "1111111222233333444455555556666666777778888"    
 beat_in_measure  <- "12233441234123441234122334412a3441123441234"
-ind_voiced      <- "1111111111011111111011111111011111111111000"
  
 data.frame(rhythm, measure, beat_in_measure, ind_voiced)
 
@@ -212,60 +213,76 @@ aes_drm <- function(){
 }
 
 
-scale_xy_drm <- function(){
+scale_xy_drm <- function(y_limits = c(4, 16)){
   
-  list(ggplot2::scale_y_continuous(limits = c(4, 16)),
+  list(ggplot2::scale_y_continuous(limits = y_limits),
   ggplot2::scale_x_continuous(
-    expand = ggplot2::expansion(mult = c(.1, .1))))
+    expand = ggplot2::expansion(mult = c(.15, .15))))
                                 
 }
 
-facet_drm <- function(){
+facet_drm <- function(ncol = 2){
   
-  facet_wrap(~ id_phrase, ncol = 2, scales = "free_x")
-  
-}
-
-
-stamp_drm_staff <- function(){
-  
-    geom_hline(yintercept = c(8,10,12,14,16), color = "grey")
+  facet_wrap(~ id_phrase, ncol = ncol, scales = "free_x")
   
 }
 
-geom_note_link <- function(){
+
+stamp_drm_staff <- function(color = "grey"){
   
-  geom_line(linetype = "dashed", color = "gray")
+    geom_hline(yintercept = c(8,10,12,14,16), color = color)
+  
+}
+
+geom_note_link <- function(linetype = "dashed", color = "gray"){
+  
+  geom_line(linetype = linetype, color = color)
   
 }
 
 
 geom_note <- function(alpha = .2, size = 26, shape = 19, ...){
   
+  list(ggplot2::geom_point(alpha = 1, size = size, shape = shape, fill = "white", color = "white", ...),
   ggplot2::geom_point(alpha = alpha, size = size, shape = shape, ...)
+  )
   
 }
 
-geom_lyric <- function(){
+geom_lyric <- function(size = 8){
   
-  ggplot2::geom_text(aes(label = lyric), size = 8)
-  
+  ggplot2::geom_text(aes(label = lyric), size = size)
   
 }
 
-geom_drm <- function(){
+geom_drm <- function(size = 8){
   
-  ggplot2::geom_text(aes(label = drm), size = 8)
-  
+  ggplot2::geom_text(aes(label = drm), size = size)
   
 }
+
+
+geom_doremi <- function(size = 8){
+  
+  ggplot2::geom_text(aes(label = doremi), size = size)
+  
+}
+
+
 
 
 theme_drm <- function(){
   
-  list(ggplot2::theme(legend.position = "none"),
-  ggplot2::theme_minimal() ,
-  ggplot2::theme(panel.grid = ggplot2::element_blank()))
+  list(
+    ggplot2::theme_void(),
+    ggplot2::theme(legend.position = "none"),
+  ggplot2::theme(panel.grid = ggplot2::element_blank()),
+  ggplot2::theme(panel.spacing.x =  
+          unit(0, "lines")),
+  ggplot2::theme(panel.spacing.y =  
+          unit(.20, "lines")),
+  ggplot2::theme(strip.text = element_blank()))
+    
   
 }
 
@@ -306,7 +323,7 @@ last_plot() +
   facet_wrap(~id_phrase, ncol = 3)
 
 ggwipe::last_plot_wipe_last() + 
-  geom_drm()
+  geom_doremi()
 ```
 
 
@@ -330,12 +347,16 @@ melody_twinkle |>
   geom_note() + 
   facet_drm() + 
   geom_lyric() + 
-  scale_xy_drm() 
+  scale_xy_drm() + 
+  theme_drm()
 
 ggwipe::last_plot_wipe_last() +
   theme_void() +
   geom_note(color = "black", fill = "white", shape = 21, alpha = 1)
+```
 
+
+```{r, fig.height=8,fig.width=11}
 melodie_are_you_sleeping <- "drmd drmd mfs mfs slsfmd slsfmd dSd dSd"
 
 lyrics_are_you_sleeping <- 
@@ -355,16 +376,20 @@ melodie_are_you_sleeping |>
   aes_drm() + 
   stamp_drm_staff() +
   geom_note_link() + 
-  geom_note() + 
-  facet_drm() + 
-  geom_lyric() + 
-  scale_xy_drm() 
+  geom_note(size = 12) + 
+  facet_drm(ncol = 4) + 
+  geom_lyric(size = 4) + 
+  scale_xy_drm() +
+  theme_drm()
 
 ggwipe::last_plot_wipe_last() +
   theme_void() +
   geom_note(color = "black", fill = "white", shape = 21, alpha = 1)
+```
 
 
+
+```{r}
 lyrics_alphabet <- 
 "a b c d e f g
 h i j k l m n o p
@@ -467,7 +492,24 @@ drm_imagination |>
 
 ```
 
-
+```{r, fig.height=8.5, fig.width=11}
+drm_imagination |> 
+  join_phrases_drm_lyrics(lyrics_imagination) |> 
+  ggplot() + 
+  aes_drm() + 
+  stamp_drm_staff() +
+  geom_note_link() + 
+  geom_note(size = 15) + 
+  facet_drm() + 
+  geom_lyric(size = 4) + 
+  scale_xy_drm() + 
+  # coord_flip() + 
+  theme_drm() +
+  aes(color = doremi %>% fct_rev()) + 
+  theme(legend.position = "none") + 
+  theme(strip.text = element_blank()) +
+  theme(panel.spacing = unit(-0, "lines"))
+```
 
 ```{r}
 knitr::knit_code$get() |> names()
@@ -482,6 +524,6 @@ readme2pkg::chunk_to_r(c("scale_reference",
 ```
 
 
-```{r, error = T}
+```{r, eval = F}
 devtools::check(".")
 ```

@@ -24,7 +24,7 @@ return_rel_freq_3octave <- function(){
   
 }
 
-return_drm_df <- function(base_freq = 440){  #A above middle C
+return_drm_df <- function(base_freq = 311.127){  #E above middle C
   
   data.frame(drm = return_drm_3octaves(),
              doremi = c(rep(c("do", "re", "mi", "fa", "sol", "la", "ti"), 3), "do") %>% forcats::fct_inorder(),
